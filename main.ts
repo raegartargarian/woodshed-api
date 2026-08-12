@@ -10,6 +10,7 @@ import { json, Router } from "./http.ts";
 import { WoodshedStore } from "./kv.ts";
 import { registerHierarchyRoutes } from "./routes/hierarchy.ts";
 import { registerAiRoutes } from "./routes/ai.ts";
+import { registerDistributionRoutes, runDeadlineSweep } from "./routes/distribute.ts";
 import { registerSessionRoutes } from "./routes/session.ts";
 
 const cfg = loadConfig();
@@ -28,6 +29,22 @@ router.publicGet("/health", () =>
 registerHierarchyRoutes(router, store);
 registerSessionRoutes(router, store);
 registerAiRoutes(router, store);
+registerDistributionRoutes(router, store);
+
+/**
+ * Daily deadline sweep.
+ *
+ * Registered only when email is configured — a cron that runs and can send
+ * nothing is a scheduled no-op that still looks like it is working.
+ */
+if (cfg.email.enabled) {
+  Deno.cron("woodshed-deadline-sweep", "0 13 * * *", async () => {
+    const result = await runDeadlineSweep(store, cfg);
+    console.log(
+      `Deadline sweep: scanned ${result.scanned}, sent ${result.sent}, skipped ${result.skipped}`,
+    );
+  });
+}
 
 Deno.serve((request) => router.handle(request, cfg));
 
