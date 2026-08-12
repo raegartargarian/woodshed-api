@@ -24,6 +24,9 @@ function serialize(node: WsNode) {
     createdAt: node.createdAt,
     archived: node.archived,
     status: node.vault.status,
+    // Needed by the browser upload path: a new attachment must mint on the same
+    // ledger as the vault it belongs to.
+    ledger: node.vault.ledger,
   };
 }
 

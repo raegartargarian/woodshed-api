@@ -9,6 +9,7 @@ import { loadConfig } from "./config.ts";
 import { json, Router } from "./http.ts";
 import { WoodshedStore } from "./kv.ts";
 import { registerHierarchyRoutes } from "./routes/hierarchy.ts";
+import { registerSessionRoutes } from "./routes/session.ts";
 
 const cfg = loadConfig();
 const store = await WoodshedStore.open();
@@ -24,6 +25,7 @@ router.publicGet("/health", () =>
   }));
 
 registerHierarchyRoutes(router, store);
+registerSessionRoutes(router, store);
 
 Deno.serve((request) => router.handle(request, cfg));
 

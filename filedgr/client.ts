@@ -481,6 +481,24 @@ export class FiledgrClient {
     }
   }
 
+  /**
+   * The calling user.
+   *
+   * Needed because the invitation route is scoped to a user id
+   * (`POST /users/{id}/invitations`) — an invite has to be sent *as* somebody,
+   * and the caller is the only identity available in attended mode.
+   */
+  async getCurrentUser(): Promise<{ id: string; email: string | null }> {
+    const user = await this.request<{
+      id: string;
+      credentials?: { type: string; key: string }[];
+    }>("GET", "/users");
+    if (!user?.id) throw new Error("GET /users returned no user");
+
+    const email = user.credentials?.find((c) => c.type === "EMAIL")?.key ?? null;
+    return { id: user.id, email };
+  }
+
   async listVaultPermissions(vaultId: string): Promise<Paginated<Record<string, unknown>>> {
     const query = new URLSearchParams({ page: "1", page_size: "100" });
     const result = await this.request<Paginated<Record<string, unknown>>>(
