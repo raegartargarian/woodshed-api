@@ -1,0 +1,33 @@
+{
+  "name": "@3rdstage/woodshed-domain",
+  "version": "0.1.0",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./domain/mod.ts"
+  },
+  "publish": {
+    "include": ["domain/mod.ts", "README.md", "LICENSE", "deno.json"]
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --unstable-kv --watch main.ts",
+    "start": "deno run --allow-net --allow-env --unstable-kv main.ts",
+    "test": "deno test --allow-env --unstable-kv",
+    "check": "deno check main.ts && deno lint && deno fmt --check",
+    "publish:dry": "deno publish --dry-run"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "lib": ["deno.window", "deno.unstable", "esnext"]
+  },
+  "fmt": {
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  }
+}
