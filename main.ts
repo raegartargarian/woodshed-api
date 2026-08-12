@@ -11,6 +11,7 @@ import { WoodshedStore } from "./kv.ts";
 import { registerHierarchyRoutes } from "./routes/hierarchy.ts";
 import { registerAiRoutes } from "./routes/ai.ts";
 import { registerDistributionRoutes, runDeadlineSweep } from "./routes/distribute.ts";
+import { registerDraftRoutes } from "./routes/drafts.ts";
 import { registerSessionRoutes } from "./routes/session.ts";
 
 const cfg = loadConfig();
@@ -30,6 +31,7 @@ registerHierarchyRoutes(router, store);
 registerSessionRoutes(router, store);
 registerAiRoutes(router, store);
 registerDistributionRoutes(router, store);
+registerDraftRoutes(router, store);
 
 /**
  * Daily deadline sweep.
