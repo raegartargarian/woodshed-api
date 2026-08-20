@@ -20,6 +20,39 @@ import { HierarchyService } from "../filedgr/hierarchy.ts";
 import { requireVaultAccess } from "../filedgr/access.ts";
 import { encodeWsTag, sessionVaultName } from "../domain/mod.ts";
 import { requireCallerJwt } from "../http.ts";
+import { FiledgrError } from "../filedgr/client.ts";
+
+/**
+ * Confirm the caller can actually see the template before trying to build on it.
+ *
+ * Templates are scoped to the entity that owns them, so a template created by
+ * one account is invisible to every other — `GET /templates/{id}` answers 404
+ * and `POST /vaults` then fails with a bare 500. Without this check the auditor
+ * sees "Internal server error" for what is really a one-line configuration
+ * problem.
+ *
+ * The fix on the platform side is to mark the three level-templates `public`,
+ * which makes them usable from any entity.
+ */
+async function assertTemplateVisible(
+  client: FiledgrClient,
+  templateId: string,
+  level: string,
+): Promise<void> {
+  try {
+    await client.getTemplate(templateId);
+  } catch (error) {
+    if (error instanceof FiledgrError && error.isNotFound) {
+      throw new HttpError(
+        409,
+        `The "${level}" template is not visible to your account. Templates are ` +
+          `scoped to the entity that created them — mark it public, or point ` +
+          `WS_${level.toUpperCase()}_TEMPLATE_ID at one your account owns.`,
+      );
+    }
+    throw error;
+  }
+}
 
 async function body<T>(ctx: RequestContext): Promise<T> {
   try {
@@ -52,9 +85,11 @@ export function registerProvisionRoutes(router: Router, store: WoodshedStore): R
   router.post("/api/clients", async (ctx) => {
     const { name } = await body<{ name?: string }>(ctx);
     const client = FiledgrClient.forCaller(ctx.cfg, requireCallerJwt(ctx));
+    const templateId = requireTemplate(ctx.cfg.filedgr.rootTemplateId, "root");
+    await assertTemplateVisible(client, templateId, "root");
 
     const vault = await client.createVault({
-      templateId: requireTemplate(ctx.cfg.filedgr.rootTemplateId, "root"),
+      templateId,
       name: nonEmpty(name, "name"),
       description: encodeWsTag({ level: "root" }),
     });
@@ -88,8 +123,11 @@ export function registerProvisionRoutes(router: Router, store: WoodshedStore): R
       );
     }
 
+    const claimTemplateId = requireTemplate(ctx.cfg.filedgr.claimTemplateId, "claim");
+    await assertTemplateVisible(client, claimTemplateId, "claim");
+
     const vault = await client.createVault({
-      templateId: requireTemplate(ctx.cfg.filedgr.claimTemplateId, "claim"),
+      templateId: claimTemplateId,
       name: number,
       description: encodeWsTag({ level: "claim", parent: rootId, claim: number }),
     });
@@ -119,8 +157,11 @@ export function registerProvisionRoutes(router: Router, store: WoodshedStore): R
     const wsNumber = await store.allocateWsNumber(claimId, used);
     const claimNumber = claim.tag.claim ?? claim.name;
 
+    const sessionTemplateId = requireTemplate(ctx.cfg.filedgr.sessionTemplateId, "session");
+    await assertTemplateVisible(client, sessionTemplateId, "session");
+
     const vault = await client.createVault({
-      templateId: requireTemplate(ctx.cfg.filedgr.sessionTemplateId, "session"),
+      templateId: sessionTemplateId,
       name: sessionVaultName(claimNumber, wsNumber),
       description: encodeWsTag({
         level: "session",
