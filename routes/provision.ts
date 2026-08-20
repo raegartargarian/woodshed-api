@@ -4,7 +4,7 @@
  * This is what makes the design work without touching the Filedgr dashboard.
  * The dashboard's vault form has no field for a hierarchy tag, so building the
  * tree there would mean an admin hand-pasting
- * `ws:claim|parent:<uuid>|claim:25000171` into a description and copying the
+ * `ws:claim|parent:<uuid>|claim:10000001` into a description and copying the
  * parent's UUID out of a URL — for every claim and every session. One typo and
  * the session silently disappears from the tree.
  *
