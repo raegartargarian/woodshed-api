@@ -29,5 +29,15 @@
     "rules": {
       "tags": ["recommended"]
     }
+  },
+  "deploy": {
+    "org": "raegartargarian",
+    "app": "woodshed-api"
   }
 }
+
+
+
+
+
+

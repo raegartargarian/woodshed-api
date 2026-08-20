@@ -40,14 +40,21 @@ export class HierarchyService {
   ) {}
 
   private templateFor(level: WsLevel): string {
-    switch (level) {
-      case "root":
-        return this.cfg.filedgr.rootTemplateId;
-      case "claim":
-        return this.cfg.filedgr.claimTemplateId;
-      case "session":
-        return this.cfg.filedgr.sessionTemplateId;
+    const id = level === "root"
+      ? this.cfg.filedgr.rootTemplateId
+      : level === "claim"
+      ? this.cfg.filedgr.claimTemplateId
+      : this.cfg.filedgr.sessionTemplateId;
+
+    if (!id) {
+      // Without an id the query would filter on nothing and return every vault
+      // in the entity, which looks like it worked and is badly wrong.
+      throw new Error(
+        `No template id configured for the "${level}" level. Set WS_${level.toUpperCase()}` +
+          `_TEMPLATE_ID on this deployment.`,
+      );
     }
+    return id;
   }
 
   /**

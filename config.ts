@@ -118,9 +118,13 @@ export function loadConfig(): Config {
       // work before the bot credential has been provisioned.
       apiKey: authMode === "apikey" ? env("FILEDGR_API_KEY") : optional("FILEDGR_API_KEY"),
       apiSecret: authMode === "apikey" ? env("FILEDGR_API_SECRET") : optional("FILEDGR_API_SECRET"),
-      rootTemplateId: env("WS_ROOT_TEMPLATE_ID"),
-      claimTemplateId: env("WS_CLAIM_TEMPLATE_ID"),
-      sessionTemplateId: env("WS_SESSION_TEMPLATE_ID"),
+      // Optional at boot, like the AI key: a service that refuses to start on a
+      // missing id is a service you cannot deploy before you have configured it,
+      // and the crash gives no clue which id is missing. /health reports which
+      // are set; the hierarchy routes refuse individually with a clear message.
+      rootTemplateId: optional("WS_ROOT_TEMPLATE_ID"),
+      claimTemplateId: optional("WS_CLAIM_TEMPLATE_ID"),
+      sessionTemplateId: optional("WS_SESSION_TEMPLATE_ID"),
       ledger: optional("FILEDGR_LEDGER", "POLYGON_ZKEVM"),
     },
     openai: {
