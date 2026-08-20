@@ -34,28 +34,28 @@ environment variables below. Nothing else is required — KV and Cron are provis
 
 ## Environment
 
-| Variable                  | Required       | Default                     | Notes                                                                                                                           |
-| ------------------------- | -------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `WS_SESSION_SECRET`       | **yes**        |                             | Shared secret the web app presents as `x-ws-session`. Without it this service would be an open relay to its platform credential |
-| `WS_STAGE`                |                | `dev`                       | `dev` \| `test` \| `prod` — selects default API hosts                                                                           |
-| `WS_PUBLIC_BASE_URL`      |                | `http://localhost:8000`     | Public origin, used to build SME upload links                                                                                   |
-| `WS_ALLOWED_ORIGINS`      |                | `http://localhost:5173`     | Comma-separated CORS allowlist                                                                                                  |
-| `FILEDGR_AUTH_MODE`       |                | `apikey`                    | `apikey` for unattended work; `jwt` relays the caller's own token                                                               |
-| `FILEDGR_API_KEY`         | in apikey mode |                             | Machine credential, provisioned by the platform operator                                                                        |
-| `FILEDGR_API_SECRET`      | in apikey mode |                             |                                                                                                                                 |
-| `FILEDGR_API_URL`         |                | derived from stage          | Machine API base                                                                                                                |
-| `FILEDGR_WEBAPP_API_URL`  |                | derived from stage          | Web API base, used in jwt mode                                                                                                  |
-| `FILEDGR_LEDGER`          |                | `POLYGON_ZKEVM`             | Ledger new attachments mint on                                                                                                  |
-| `WS_ROOT_TEMPLATE_ID`     | **yes**        |                             | Template identifying client vaults                                                                                              |
-| `WS_CLAIM_TEMPLATE_ID`    | **yes**        |                             | Template identifying claim vaults                                                                                               |
-| `WS_SESSION_TEMPLATE_ID`  | **yes**        |                             | Template identifying session vaults; carries the seven required streams                                                         |
-| `OPENAI_API_KEY`          | **yes**        |                             |                                                                                                                                 |
-| `OPENAI_FRONTIER_MODEL`   |                | `gpt-5`                     | Prose synthesis, findings, action items                                                                                         |
-| `OPENAI_CHEAP_MODEL`      |                | `gpt-5-mini`                | Tabular extraction                                                                                                              |
-| `OPENAI_MAX_INPUT_TOKENS` |                | `120000`                    | Hard ceiling — a run above it is refused rather than billed                                                                     |
-| `RESEND_API_KEY`          |                |                             | Absent disables email entirely                                                                                                  |
-| `WS_EMAIL_FROM`           |                | `woodshed@mail.example.com` | Must be a verified sending domain                                                                                               |
-| `WS_EMAIL_REPLY_TO`       |                |                             |                                                                                                                                 |
+| Variable                  | Required       | Default                     | Notes                                                                                                                                       |
+| ------------------------- | -------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WS_APP_KEY`              | **yes**        |                             | Public key the web app presents as `x-ws-app-key`. Ships in the frontend bundle, so it is NOT a secret — it only keeps drive-by traffic out |
+| `WS_STAGE`                |                | `dev`                       | `dev` \| `test` \| `prod` — selects default API hosts                                                                                       |
+| `WS_PUBLIC_BASE_URL`      |                | `http://localhost:8000`     | Public origin, used to build SME upload links                                                                                               |
+| `WS_ALLOWED_ORIGINS`      |                | `http://localhost:5173`     | Comma-separated CORS allowlist                                                                                                              |
+| `FILEDGR_AUTH_MODE`       |                | `apikey`                    | `apikey` for unattended work; `jwt` relays the caller's own token                                                                           |
+| `FILEDGR_API_KEY`         | in apikey mode |                             | Machine credential, provisioned by the platform operator                                                                                    |
+| `FILEDGR_API_SECRET`      | in apikey mode |                             |                                                                                                                                             |
+| `FILEDGR_API_URL`         |                | derived from stage          | Machine API base                                                                                                                            |
+| `FILEDGR_WEBAPP_API_URL`  |                | derived from stage          | Web API base, used in jwt mode                                                                                                              |
+| `FILEDGR_LEDGER`          |                | `POLYGON_ZKEVM`             | Ledger new attachments mint on                                                                                                              |
+| `WS_ROOT_TEMPLATE_ID`     | **yes**        |                             | Template identifying client vaults                                                                                                          |
+| `WS_CLAIM_TEMPLATE_ID`    | **yes**        |                             | Template identifying claim vaults                                                                                                           |
+| `WS_SESSION_TEMPLATE_ID`  | **yes**        |                             | Template identifying session vaults; carries the seven required streams                                                                     |
+| `OPENAI_API_KEY`          | **yes**        |                             |                                                                                                                                             |
+| `OPENAI_FRONTIER_MODEL`   |                | `gpt-5`                     | Prose synthesis, findings, action items                                                                                                     |
+| `OPENAI_CHEAP_MODEL`      |                | `gpt-5-mini`                | Tabular extraction                                                                                                                          |
+| `OPENAI_MAX_INPUT_TOKENS` |                | `120000`                    | Hard ceiling — a run above it is refused rather than billed                                                                                 |
+| `RESEND_API_KEY`          |                |                             | Absent disables email entirely                                                                                                              |
+| `WS_EMAIL_FROM`           |                | `woodshed@mail.example.com` | Must be a verified sending domain                                                                                                           |
+| `WS_EMAIL_REPLY_TO`       |                |                             |                                                                                                                                             |
 
 ## Authentication
 
@@ -68,7 +68,7 @@ Two modes, chosen with `FILEDGR_AUTH_MODE`:
   refresh grant, so a stored token eventually expires and background work silently starts failing
   with 401s.
 
-Callers must also present `WS_SESSION_SECRET` as an `x-ws-session` header on every non-public route.
+Callers must also present `WS_APP_KEY` as an `x-ws-session` header on every non-public route.
 
 ## Data handling
 

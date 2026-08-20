@@ -10,6 +10,7 @@
 import { HttpError, json, type RequestContext, Router } from "../http.ts";
 import type { WoodshedStore } from "../kv.ts";
 import { guardClaimOverview, guardFindings } from "../ai/guardrails.ts";
+import { requireVaultAccess } from "../filedgr/access.ts";
 
 async function body<T>(ctx: RequestContext): Promise<T> {
   try {
@@ -33,6 +34,7 @@ export function registerDraftRoutes(router: Router, store: WoodshedStore): Route
   /** Rewrite the Claim Overview prose. Re-runs the checks against the new text. */
   router.put("/api/sessions/:vaultId/draft/claim-overview", async (ctx) => {
     const vaultId = ctx.params.vaultId!;
+    await requireVaultAccess(ctx, vaultId);
     const { sentences } = await body<{ sentences?: string[] }>(ctx);
 
     if (!Array.isArray(sentences) || sentences.some((s) => typeof s !== "string")) {
@@ -81,6 +83,7 @@ export function registerDraftRoutes(router: Router, store: WoodshedStore): Route
    */
   router.put("/api/sessions/:vaultId/draft/findings", async (ctx) => {
     const vaultId = ctx.params.vaultId!;
+    await requireVaultAccess(ctx, vaultId);
     const patch = await body<{
       findings?: { id: string; text?: string; confirmed_score?: number | null }[];
       actionItems?: {
@@ -181,6 +184,7 @@ export function registerDraftRoutes(router: Router, store: WoodshedStore): Route
       throw new HttpError(404, "Unknown document kind");
     }
 
+    await requireVaultAccess(ctx, vaultId);
     const { attachmentId } = await body<{ attachmentId?: string }>(ctx);
     if (!attachmentId) throw new HttpError(400, "attachmentId is required");
 

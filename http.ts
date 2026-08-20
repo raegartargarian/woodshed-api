@@ -23,7 +23,7 @@ interface Route {
   method: string;
   segments: string[];
   handler: Handler;
-  /** Public routes skip the session-secret check (SME upload pages, health). */
+  /** Public routes skip the app-key check (SME upload pages, health). */
   publicRoute: boolean;
 }
 
@@ -115,7 +115,7 @@ export class Router {
 
     try {
       if (!hit.route.publicRoute) {
-        assertSession(request, cfg);
+        assertAppKey(request, cfg);
       }
 
       const response = await hit.route.handler({
@@ -137,14 +137,17 @@ export class Router {
 // ---------------------------------------------------------------------------
 
 /**
- * The SPA presents a shared secret so this server is not an open relay to the
- * Filedgr bot credential. It is not user authentication — the caller's identity
- * comes from the relayed Filedgr JWT, which the platform verifies.
+ * A coarse gate, not a security boundary.
+ *
+ * The key ships inside the frontend bundle, so treat it as public. It exists to
+ * keep drive-by traffic off this service; it proves nothing about who is
+ * calling. Authorization is `requireVaultAccess`, which asks the platform
+ * whether the caller's own token may touch the vault in question.
  */
-function assertSession(request: Request, cfg: Config): void {
-  const presented = request.headers.get("x-ws-session");
-  if (!presented || !timingSafeEqual(presented, cfg.sessionSecret)) {
-    throw new HttpError(401, "Missing or invalid x-ws-session header");
+function assertAppKey(request: Request, cfg: Config): void {
+  const presented = request.headers.get("x-ws-app-key");
+  if (!presented || !timingSafeEqual(presented, cfg.appKey)) {
+    throw new HttpError(401, "Missing or invalid x-ws-app-key header");
   }
 }
 
@@ -187,7 +190,7 @@ function corsHeaders(origin: string | null, cfg: Config): Record<string, string>
   return {
     "Access-Control-Allow-Origin": allowed ?? "",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type, x-ws-session",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, x-ws-app-key",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };

@@ -13,6 +13,7 @@ import type { Config } from "../config.ts";
 import { Mailer } from "../email/resend.ts";
 import { FiledgrClient } from "../filedgr/client.ts";
 import { FINDINGS_STREAM, formatUsDate, type WoodshedRecord } from "../domain/mod.ts";
+import { requireVaultAccess } from "../filedgr/access.ts";
 
 /** How long an SME has to use their link. Generous — chasing a dead link is worse. */
 const UPLOAD_TOKEN_DAYS = 45;
@@ -43,6 +44,9 @@ export function registerDistributionRoutes(router: Router, store: WoodshedStore)
    */
   router.post("/api/sessions/:vaultId/distribute", async (ctx) => {
     const vaultId = ctx.params.vaultId!;
+    // Guard first: this sends mail to real adjusters and SMEs.
+    await requireVaultAccess(ctx, vaultId);
+
     const record = await store.get(vaultId);
     if (!record) throw new HttpError(404, "No Woodshed record for this session");
 
@@ -134,6 +138,8 @@ export function registerDistributionRoutes(router: Router, store: WoodshedStore)
   /** Resend one owner's items, for the "no reply" case. */
   router.post("/api/sessions/:vaultId/remind/:email", async (ctx) => {
     const { vaultId, email } = ctx.params as { vaultId: string; email: string };
+    await requireVaultAccess(ctx, vaultId);
+
     const record = await store.get(vaultId);
     if (!record) throw new HttpError(404, "No Woodshed record for this session");
 

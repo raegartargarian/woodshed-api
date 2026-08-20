@@ -18,6 +18,7 @@ import {
   type WsParticipant,
   type WsStatus,
 } from "../domain/mod.ts";
+import { requireVaultAccess } from "../filedgr/access.ts";
 
 function clientFor(ctx: RequestContext): FiledgrClient {
   return FiledgrClient.forCaller(ctx.cfg, requireCallerJwt(ctx));
@@ -36,10 +37,16 @@ async function ensureRecord(
   store: WoodshedStore,
   vaultId: string,
 ): Promise<WoodshedRecord> {
+  // Authorize before anything else. Returning an existing record early without
+  // this check would leave every route that only reads KV — status,
+  // meeting date, participants — open to anyone holding the (public) session
+  // header, since KV knows nothing about who may see what.
+  const client = await requireVaultAccess(ctx, vaultId);
+
   const existing = await store.get(vaultId);
   if (existing) return existing;
 
-  const service = new HierarchyService(clientFor(ctx), ctx.cfg);
+  const service = new HierarchyService(client, ctx.cfg);
   const { session, claim, root } = await service.resolveAncestry(vaultId);
 
   try {
@@ -242,6 +249,8 @@ export function registerSessionRoutes(router: Router, store: WoodshedStore): Rou
    */
   router.delete("/api/sessions/:vaultId/participants/:participantId", async (ctx) => {
     const { vaultId, participantId } = ctx.params as { vaultId: string; participantId: string };
+
+    await requireVaultAccess(ctx, vaultId);
 
     const record = await store.get(vaultId);
     if (!record) throw new HttpError(404, "No Woodshed record for this session");

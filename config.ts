@@ -56,8 +56,15 @@ export interface Config {
   publicBaseUrl: string;
   /** Origins allowed to call this server from a browser. */
   allowedOrigins: string[];
-  /** Shared secret the SPA presents. Distinct from the Filedgr credentials. */
-  sessionSecret: string;
+  /**
+   * Public key the web app presents as `x-ws-app-key`.
+   *
+   * NOT a secret: it is compiled into the frontend bundle, so anyone who opens
+   * devtools has it. It keeps casual scanners and other people's misconfigured
+   * apps off this service. Real authorization is the caller's Filedgr token —
+   * see filedgr/access.ts.
+   */
+  appKey: string;
 }
 
 function env(key: string, fallback?: string): string {
@@ -132,7 +139,7 @@ export function loadConfig(): Config {
       "http://localhost:5173",
       "https://app.example.com",
     ]),
-    sessionSecret: env("WS_SESSION_SECRET"),
+    appKey: env("WS_APP_KEY"),
   };
 
   return cached;

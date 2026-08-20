@@ -39,6 +39,7 @@ import {
   type WsActionItem,
   type WsFinding,
 } from "../domain/mod.ts";
+import { requireVaultAccess } from "../filedgr/access.ts";
 
 // ---------------------------------------------------------------------------
 // Request shapes
@@ -151,6 +152,7 @@ export function registerAiRoutes(router: Router, store: WoodshedStore): Router {
    * and lets the UI show which documents are driving it.
    */
   router.post("/api/sessions/:vaultId/ai/estimate", async (ctx) => {
+    await requireVaultAccess(ctx, ctx.params.vaultId!);
     const request = await body<{ documents?: DocumentInput[] }>(ctx);
     const documents = request.documents ?? [];
 
@@ -172,6 +174,10 @@ export function registerAiRoutes(router: Router, store: WoodshedStore): Router {
   /** 1st Response — generate the Claim Overview draft. */
   router.post("/api/sessions/:vaultId/ai/claim-overview", async (ctx) => {
     const vaultId = ctx.params.vaultId!;
+    // Guard first: generation spends money, so it must never run for a caller
+    // who cannot prove access to this Woodshed.
+    await requireVaultAccess(ctx, vaultId);
+
     const request = await body<ClaimOverviewRequest>(ctx);
     const documents = request.documents ?? [];
 
@@ -259,6 +265,8 @@ export function registerAiRoutes(router: Router, store: WoodshedStore): Router {
   /** 2nd Response — findings, action items and proposed compliance scores. */
   router.post("/api/sessions/:vaultId/ai/findings", async (ctx) => {
     const vaultId = ctx.params.vaultId!;
+    await requireVaultAccess(ctx, vaultId);
+
     const request = await body<FindingsRequest>(ctx);
 
     if (!request.transcript?.text) {
@@ -452,6 +460,7 @@ export function registerAiRoutes(router: Router, store: WoodshedStore): Router {
     if (kind !== "claim-overview" && kind !== "findings") {
       throw new HttpError(404, "Unknown document kind");
     }
+    await requireVaultAccess(ctx, vaultId);
 
     const record = await store.get(vaultId);
     if (!record) throw new HttpError(404, "No Woodshed record for this session");
