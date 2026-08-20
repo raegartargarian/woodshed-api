@@ -258,6 +258,47 @@ export class FiledgrClient {
     return out;
   }
 
+  /**
+   * Create a vault.
+   *
+   * Verified against the live API with an ordinary user token — this needs no
+   * admin rights and no dashboard. `config` is copied from the template, which
+   * is what the platform's own dashboard does; sending values the template does
+   * not support is rejected.
+   */
+  async createVault(input: {
+    templateId: string;
+    name: string;
+    description: string;
+    config?: Record<string, boolean>;
+  }): Promise<VaultDto> {
+    const vault = await this.request<VaultDto>("POST", "/vaults", {
+      body: {
+        template_id: input.templateId,
+        name: input.name,
+        description: input.description,
+        ledger: this.ledger,
+        config: input.config ?? {
+          is_permissioned: true,
+          is_searchable: true,
+          is_ai_ready: false,
+          is_dynamic_streams: false,
+        },
+      },
+    });
+    if (!vault) throw new Error("POST /vaults returned no content");
+    return vault;
+  }
+
+  async getTemplate(templateId: string): Promise<{ config?: Record<string, boolean> }> {
+    const template = await this.request<{ config?: Record<string, boolean> }>(
+      "GET",
+      `/templates/${templateId}`,
+    );
+    if (!template) throw new Error(`Template ${templateId} returned no content`);
+    return template;
+  }
+
   async getVault(vaultId: string): Promise<VaultDto> {
     const vault = await this.request<VaultDto>("GET", `/vaults/${vaultId}`);
     if (!vault) throw new Error(`Vault ${vaultId} returned no content`);
