@@ -25,6 +25,14 @@ router.publicGet("/health", () =>
     stage: cfg.stage,
     filedgrAuthMode: cfg.filedgr.authMode,
     emailEnabled: cfg.email.enabled,
+    aiEnabled: cfg.openai.apiKey !== "",
+    // Surfaced so a misconfigured deploy is visible from the health check
+    // rather than discovered when an auditor presses Generate.
+    templatesConfigured: {
+      root: cfg.filedgr.rootTemplateId !== "",
+      claim: cfg.filedgr.claimTemplateId !== "",
+      session: cfg.filedgr.sessionTemplateId !== "",
+    },
   }));
 
 registerHierarchyRoutes(router, store);

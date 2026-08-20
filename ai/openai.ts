@@ -70,6 +70,13 @@ export class OpenAiClient {
    * come from, which is worse than an error the auditor can act on.
    */
   async complete<T>(request: CompletionRequest): Promise<CompletionResult<T>> {
+    if (!this.cfg.openai.apiKey) {
+      throw new LlmError(
+        "AI is not configured on this deployment. Set OPENAI_API_KEY to enable " +
+          "Claim Overview and Findings generation.",
+      );
+    }
+
     const estimated = estimateTokens(request.system + request.user);
     if (estimated > this.cfg.openai.maxInputTokens) {
       throw new LlmError(

@@ -36,6 +36,7 @@ export interface Config {
   };
 
   openai: {
+    /** Empty when AI is not configured on this deployment. */
     apiKey: string;
     /** Long-horizon synthesis: overview prose, findings, action items. */
     frontierModel: string;
@@ -123,7 +124,10 @@ export function loadConfig(): Config {
       ledger: optional("FILEDGR_LEDGER", "POLYGON_ZKEVM"),
     },
     openai: {
-      apiKey: env("OPENAI_API_KEY"),
+      // Optional at boot on purpose. A missing AI key should not take down
+      // hierarchy browsing, participants or uploads — the generation routes
+      // refuse individually instead, with a message that says what is missing.
+      apiKey: optional("OPENAI_API_KEY"),
       frontierModel: optional("OPENAI_FRONTIER_MODEL", "gpt-5"),
       cheapModel: optional("OPENAI_CHEAP_MODEL", "gpt-5-mini"),
       maxInputTokens: int("OPENAI_MAX_INPUT_TOKENS", 120_000),
