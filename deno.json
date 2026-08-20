@@ -6,19 +6,28 @@
     ".": "./domain/mod.ts"
   },
   "publish": {
-    "include": ["domain/mod.ts", "README.md", "LICENSE", "deno.json"]
+    "include": [
+      "domain/mod.ts",
+      "README.md",
+      "LICENSE",
+      "deno.json"
+    ]
   },
   "tasks": {
-    "dev": "deno run --allow-net --allow-env --unstable-kv --watch main.ts",
-    "start": "deno run --allow-net --allow-env --unstable-kv main.ts",
-    "test": "deno test --allow-env --unstable-kv",
+    "dev": "deno run --allow-net --allow-env --watch main.ts",
+    "start": "deno run --allow-net --allow-env main.ts",
+    "test": "deno test --allow-env",
     "check": "deno check main.ts && deno lint && deno fmt --check",
     "publish:dry": "deno publish --dry-run"
   },
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "lib": ["deno.window", "deno.unstable", "esnext"]
+    "lib": [
+      "deno.window",
+      "deno.unstable",
+      "esnext"
+    ]
   },
   "fmt": {
     "lineWidth": 100,
@@ -27,17 +36,20 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"]
+      "tags": [
+        "recommended"
+      ]
     }
   },
   "deploy": {
     "org": "raegartargarian",
     "app": "woodshed-api"
-  }
+  },
+  "unstable": [
+    "kv",
+    "cron"
+  ]
 }
-
-
-
 
 
 
