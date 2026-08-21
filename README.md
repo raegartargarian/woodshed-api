@@ -9,21 +9,32 @@ scheduler to host separately.
 ```
 main.ts            entry point + route registration
 config.ts          environment, read once at boot
-http.ts            router, CORS, session auth, error mapping
+http.ts            router, CORS, app-key gate, error mapping
 kv.ts              Deno KV store — the live system of record
 domain/mod.ts      shared domain model, published to JSR
+ai/
+  guardrails.ts    fail-closed checks run before any draft is shown
+  openai.ts        model adapter; structured output, hard token ceiling
+  prompts.ts       versioned prompts + response schemas
+email/resend.ts    action items, reminders, SME notifications
 filedgr/
   client.ts        API client for the document platform
+  access.ts        per-vault authorization
   hierarchy.ts     Client → Claim → Session tree
 routes/
   hierarchy.ts     tree browsing + session numbering
+  provision.ts     creating clients, claims and sessions
+  session.ts       record, status, meeting date, participants
+  ai.ts            generation + the approval gate
+  drafts.ts        editing, score confirmation, publication
+  distribute.ts    action items, SME return page, deadline sweep
 ```
 
 ## Running locally
 
 ```sh
 deno task dev      # watch mode on :8000
-deno task test     # 49 tests
+deno task test     # 100 tests
 deno task check    # typecheck + lint + fmt
 ```
 
@@ -68,7 +79,7 @@ Two modes, chosen with `FILEDGR_AUTH_MODE`:
   refresh grant, so a stored token eventually expires and background work silently starts failing
   with 401s.
 
-Callers must also present `WS_APP_KEY` as an `x-ws-session` header on every non-public route.
+Callers must also present `WS_APP_KEY` as an `x-ws-app-key` header on every non-public route.
 
 ## Data handling
 
